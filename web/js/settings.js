@@ -18,5 +18,6 @@ export const BSPEED=7, BRADIUS=5, MAX_BOUNCE=6, TRAIL_LEN=25;
 export const AIM_SPD=2, AIM_MIN=185, AIM_MAX=355, AIM_START=270;
 export const PSIZE=22, ESIZE=28;
 export const SC_ENEMY=10, SC_PEN=2, SC_BONUS=50;
+export const RETRY_COUNTS=[0,2,3], RETRY_PENS=[0,7,10];
 export const FADE_SPD=0.04;
 export const S_MENU='MENU',S_INST='INST',S_PLAY='PLAY',S_LVLC='LVLC',S_WIN='WIN',S_OVER='OVER';

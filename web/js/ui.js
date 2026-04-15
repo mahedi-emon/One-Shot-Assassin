@@ -15,7 +15,7 @@ export class UI {
     drawCircle(ctx,x,y,5,C_BCORE);
   }
 
-  drawMenu(ctx, frame) {
+  drawMenu(ctx, frame, bestScore=0) {
     const cx=W/2;
     const ga=0.06+0.02*Math.sin(frame*0.015);
     drawRadialGrad(ctx,cx,200,320,[1,0.75,0.2,ga]);
@@ -35,6 +35,10 @@ export class UI {
     drawText(ctx,"Press ENTER to Start",cx,my,28,C_TEXT,{centered:true,alpha:blink});
     drawText(ctx,"Press I for Instructions",cx,my+55,21,C_SUB,{centered:true});
     drawText(ctx,"Press ESC to Quit",cx,my+100,19,C_DIM,{centered:true});
+
+    if (bestScore > 0) {
+      drawText(ctx,`Best Score: ${bestScore}`,cx,my+145,20,C_TITLE,{centered:true});
+    }
 
     this._drawFooter(ctx,frame);
   }
@@ -120,7 +124,7 @@ export class UI {
     drawText(ctx,"Press ESC for Menu",cx,cy+155,20,C_SUB,{centered:true});
   }
 
-  drawGameOver(ctx, score, frame=0) {
+  drawGameOver(ctx, score, frame=0, retriesLeft=0, retryPenalty=0) {
     const cx=W/2, cy=H/2;
     drawRadialGrad(ctx,cx,cy-60,250,[1,0.1,0.15,0.06]);
     drawGlow(ctx,cx,cy-80,160,[1,0.1,0.15,0.1],5);
@@ -130,7 +134,11 @@ export class UI {
     drawLineGrad(ctx,cx,cy,cx+80,cy,[0.5,0.3,0.35,0.6],[0.2,0.2,0.3,0]);
     drawText(ctx,`Score: ${score}`,cx,cy+25,28,C_TEXT,{centered:true});
     const bl=0.5+0.5*Math.sin(frame*0.06);
-    drawText(ctx,"Press R to Retry",cx,cy+105,24,C_TEXT,{centered:true,alpha:bl});
+    if (retriesLeft > 0) {
+      drawText(ctx,`Press R to Retry (${retriesLeft} left, -${retryPenalty} pts)`,cx,cy+100,24,C_TEXT,{centered:true,alpha:bl});
+    } else {
+      drawText(ctx,"Press R to Restart from Level 1",cx,cy+100,24,C_DANGER,{centered:true,alpha:bl});
+    }
     drawText(ctx,"Press ESC for Menu",cx,cy+150,20,C_SUB,{centered:true});
   }
 }

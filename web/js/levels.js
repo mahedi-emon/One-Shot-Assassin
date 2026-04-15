@@ -10,7 +10,7 @@ export const LEVELS = [
     name:"Level 2 — Ricochet", bullets:3, player:[450,650],
     enemies:[
       {x:150,y:120,type:"static"},{x:400,y:200,type:"static"},
-      {x:600,y:120,type:"static"},{x:750,y:300,type:"static"}
+      {x:600,y:120,type:"static"},{x:750,y:380,type:"static"}
     ],
     walls:[{x:100,y:280,w:250,h:18},{x:550,y:280,w:250,h:18}]
   },

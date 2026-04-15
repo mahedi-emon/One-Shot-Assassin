@@ -1,5 +1,6 @@
-// game.js — Main game controller (ported from game.py)
+// game.js — Main game controller with retry system & best score
 import { W, H, FPS, AREA, FADE_SPD, SC_ENEMY, SC_PEN, SC_BONUS,
+         RETRY_COUNTS, RETRY_PENS,
          S_MENU, S_INST, S_PLAY, S_LVLC, S_WIN, S_OVER } from './settings.js';
 import { clearScreen, drawGrid, drawBorder, drawFade } from './renderer.js';
 import { init as audioInit, play as audioPlay } from './audio.js';
@@ -28,6 +29,8 @@ class Game {
     this.player = null; this.bullets = []; this.enemies = []; this.walls = [];
     this.particles = new ParticleSystem();
     this.score = 0; this.level = 0;
+    this.bestScore = 0;
+    this.retriesLeft = 0;
 
     // Demo bullets
     this.demoBullets = [
@@ -39,7 +42,6 @@ class Game {
     // Input
     this.keys = {};
     window.addEventListener('keydown', e => {
-      // Init audio on first keypress (browser policy)
       audioInit();
       if (this.fadeDir === 0) this._onKey(e.key);
       this.keys[e.key] = true;
@@ -47,7 +49,6 @@ class Game {
     });
     window.addEventListener('keyup', e => { this.keys[e.key] = false; });
 
-    // Start loop
     this._loop();
   }
 
@@ -72,7 +73,6 @@ class Game {
     if (this.state === S_MENU) {
       if (key === 'Enter') { audioPlay('select'); this._fadeTo(S_PLAY, ()=>this._newGame()); }
       else if (key === 'i' || key === 'I') { audioPlay('select'); this._fadeTo(S_INST); }
-      else if (key === 'Escape') { /* no quit in browser */ }
     } else if (this.state === S_INST) {
       if (key==='Escape'||key==='Backspace'||key==='Enter') { audioPlay('select'); this._fadeTo(S_MENU); }
     } else if (this.state === S_PLAY) {
@@ -82,9 +82,18 @@ class Game {
     } else if (this.state === S_LVLC) {
       if (key === 'Enter') { audioPlay('select'); this._fadeTo(S_PLAY, ()=>this._nextLevel()); }
       else if (key === 'Escape') { audioPlay('select'); this._fadeTo(S_MENU); }
-    } else if (this.state === S_WIN || this.state === S_OVER) {
+    } else if (this.state === S_WIN) {
       if (key === 'r' || key === 'R') { audioPlay('select'); this._fadeTo(S_PLAY, ()=>this._newGame()); }
       else if (key === 'Escape') { audioPlay('select'); this._fadeTo(S_MENU); }
+    } else if (this.state === S_OVER) {
+      if (key === 'r' || key === 'R') {
+        audioPlay('select');
+        if (this.retriesLeft > 0) {
+          this._fadeTo(S_PLAY, ()=>this._retryLevel());
+        } else {
+          this._fadeTo(S_PLAY, ()=>this._newGame());
+        }
+      } else if (key === 'Escape') { audioPlay('select'); this._fadeTo(S_MENU); }
     }
   }
 
@@ -95,8 +104,26 @@ class Game {
     }
   }
 
-  _newGame() { this.score = 0; this.level = 0; this._loadLevel(0); }
-  _nextLevel() { this.level++; if (this.level < LEVELS.length) this._loadLevel(this.level); }
+  _newGame() {
+    this.bestScore = Math.max(this.bestScore, this.score);
+    this.score = 0; this.level = 0;
+    this.retriesLeft = RETRY_COUNTS[0];
+    this._loadLevel(0);
+  }
+
+  _nextLevel() {
+    this.level++;
+    if (this.level < LEVELS.length) {
+      this.retriesLeft = RETRY_COUNTS[this.level];
+      this._loadLevel(this.level);
+    }
+  }
+
+  _retryLevel() {
+    this.score -= RETRY_PENS[this.level];
+    this.retriesLeft--;
+    this._loadLevel(this.level);
+  }
 
   _loadLevel(idx) {
     const d = LEVELS[idx];
@@ -129,14 +156,14 @@ class Game {
     if (alive === 0) {
       this.score += SC_BONUS;
       if (this.level >= LEVELS.length - 1) {
-        if (this.state !== S_WIN) audioPlay('win');
+        if (this.state !== S_WIN) { audioPlay('win'); this.bestScore = Math.max(this.bestScore, this.score); }
         this.state = S_WIN;
       } else {
         if (this.state !== S_LVLC) audioPlay('win');
         this.state = S_LVLC;
       }
     } else if (this.player.bullets === 0 && this.bullets.length === 0) {
-      if (this.state !== S_OVER) audioPlay('game_over');
+      if (this.state !== S_OVER) { audioPlay('game_over'); this.bestScore = Math.max(this.bestScore, this.score); }
       this.state = S_OVER;
     }
   }
@@ -160,7 +187,7 @@ class Game {
     if (this.state === S_MENU) {
       this.menuParticles.draw(c);
       for (const db of this.demoBullets) this.ui.drawDemoBullet(c, db.trail, db.x, db.y);
-      this.ui.drawMenu(c, this.frame);
+      this.ui.drawMenu(c, this.frame, this.bestScore);
     } else if (this.state === S_INST) {
       this.menuParticles.draw(c);
       this.ui.drawInstructions(c, this.frame);
@@ -174,7 +201,7 @@ class Game {
       this.ui.drawWin(c, this.score, this.frame);
     } else if (this.state === S_OVER) {
       this.menuParticles.draw(c);
-      this.ui.drawGameOver(c, this.score, this.frame);
+      this.ui.drawGameOver(c, this.score, this.frame, this.retriesLeft, RETRY_PENS[this.level]);
     }
 
     if (this.fadeAlpha > 0) drawFade(c, this.fadeAlpha);
