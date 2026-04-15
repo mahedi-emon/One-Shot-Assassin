@@ -83,10 +83,13 @@ export class UI {
     drawText(ctx,"Press ESC to go back",cx,H-35,17,C_DIM,{centered:true,alpha:bl});
   }
 
-  drawHud(ctx, name, score, bullets) {
+  drawHud(ctx, name, score, bullets, bestScore=0) {
     drawRectGradV(ctx,0,0,W,HUD_H,[0,0,0,0.85],[0,0,0.05,0.5]);
     drawText(ctx,name,15,14+HUD_H/2-10,20,C_TEXT);
-    drawText(ctx,`Score: ${score}`,W/2,14+HUD_H/2-10,24,C_TITLE,{centered:true});
+    
+    let st = `Score: ${score}`;
+    if (bestScore > 0) st += `    Best: ${Math.max(score, bestScore)}`;
+    drawText(ctx,st,W/2,14+HUD_H/2-10,24,C_TITLE,{centered:true});
     const col=bullets===0?C_DANGER:C_TEXT;
     const bt=`Bullets: ${bullets}`;
     const tw=measureText(ctx,bt,20);
@@ -95,7 +98,7 @@ export class UI {
     drawLineGrad(ctx,W/2,HUD_H,W,HUD_H,[0.25,0.35,0.5,0.8],[0.15,0.2,0.3,0]);
   }
 
-  drawLevelComplete(ctx, lvl, score, frame=0) {
+  drawLevelComplete(ctx, lvl, score, frame=0, bestScore=0) {
     const cx=W/2, cy=H/2;
     drawRadialGrad(ctx,cx,cy-40,200,[0,1,0.5,0.06]);
     drawGlow(ctx,cx,cy-60,120,[0,1,0.5,0.1],4);
@@ -104,12 +107,17 @@ export class UI {
     drawLine(ctx,cx-60,cy+5,cx+60,cy+5,[0.3,0.5,0.4,0.5]);
     drawText(ctx,`Score: ${score}`,cx,cy+25,28,C_TITLE,{centered:true});
     drawText(ctx,`+${SC_BONUS} Level Bonus!`,cx,cy+65,22,C_TITLE,{centered:true});
+    
+    if (bestScore > 0) {
+      drawText(ctx,`Best Score: ${Math.max(score, bestScore)}`,cx,cy+105,20,C_TITLE,{centered:true});
+    }
+
     const bl=0.5+0.5*Math.sin(frame*0.06);
     drawText(ctx,"Press ENTER for Next Level",cx,cy+140,24,C_TEXT,{centered:true,alpha:bl});
     drawText(ctx,"Press ESC for Menu",cx,cy+180,20,C_SUB,{centered:true});
   }
 
-  drawWin(ctx, score, frame=0) {
+  drawWin(ctx, score, frame=0, bestScore=0) {
     const cx=W/2, cy=H/2;
     drawRadialGrad(ctx,cx,cy-60,250,[1,0.84,0,0.06]);
     drawGlow(ctx,cx,cy-80,180,[1,0.84,0,0.1],5);
@@ -119,12 +127,17 @@ export class UI {
     drawLineGrad(ctx,cx-100,cy+5,cx,cy+5,[0.2,0.2,0.3,0],[0.5,0.5,0.65,0.6]);
     drawLineGrad(ctx,cx,cy+5,cx+100,cy+5,[0.5,0.5,0.65,0.6],[0.2,0.2,0.3,0]);
     drawText(ctx,`Final Score: ${score}`,cx,cy+30,32,C_TEXT,{centered:true});
+    
+    if (bestScore > 0) {
+      drawText(ctx,`Best Score: ${Math.max(score, bestScore)}`,cx,cy+70,24,C_TITLE,{centered:true});
+    }
+
     const bl=0.5+0.5*Math.sin(frame*0.06);
     drawText(ctx,"Press R to Play Again",cx,cy+110,24,C_TEXT,{centered:true,alpha:bl});
     drawText(ctx,"Press ESC for Menu",cx,cy+155,20,C_SUB,{centered:true});
   }
 
-  drawGameOver(ctx, score, frame=0, retriesLeft=0, retryPenalty=0) {
+  drawGameOver(ctx, score, frame=0, retriesLeft=0, retryPenalty=0, bestScore=0) {
     const cx=W/2, cy=H/2;
     drawRadialGrad(ctx,cx,cy-60,250,[1,0.1,0.15,0.06]);
     drawGlow(ctx,cx,cy-80,160,[1,0.1,0.15,0.1],5);
@@ -133,6 +146,11 @@ export class UI {
     drawLineGrad(ctx,cx-80,cy,cx,cy,[0.2,0.2,0.3,0],[0.5,0.3,0.35,0.6]);
     drawLineGrad(ctx,cx,cy,cx+80,cy,[0.5,0.3,0.35,0.6],[0.2,0.2,0.3,0]);
     drawText(ctx,`Score: ${score}`,cx,cy+25,28,C_TEXT,{centered:true});
+    
+    if (bestScore > 0) {
+      drawText(ctx,`Best Score: ${Math.max(score, bestScore)}`,cx,cy+65,24,C_TITLE,{centered:true});
+    }
+
     const bl=0.5+0.5*Math.sin(frame*0.06);
     if (retriesLeft > 0) {
       drawText(ctx,`Press R to Retry (${retriesLeft} left, -${retryPenalty} pts)`,cx,cy+100,24,C_TEXT,{centered:true,alpha:bl});

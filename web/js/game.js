@@ -195,13 +195,13 @@ class Game {
       this._renderPlay(c);
     } else if (this.state === S_LVLC) {
       this.menuParticles.draw(c);
-      this.ui.drawLevelComplete(c, this.level+1, this.score, this.frame);
+      this.ui.drawLevelComplete(c, this.level+1, this.score, this.frame, this.bestScore);
     } else if (this.state === S_WIN) {
       this.menuParticles.draw(c);
-      this.ui.drawWin(c, this.score, this.frame);
+      this.ui.drawWin(c, this.score, this.frame, this.bestScore);
     } else if (this.state === S_OVER) {
       this.menuParticles.draw(c);
-      this.ui.drawGameOver(c, this.score, this.frame, this.retriesLeft, RETRY_PENS[this.level]);
+      this.ui.drawGameOver(c, this.score, this.frame, this.retriesLeft, RETRY_PENS[this.level], this.bestScore);
     }
 
     if (this.fadeAlpha > 0) drawFade(c, this.fadeAlpha);
@@ -214,7 +214,7 @@ class Game {
     for (const b of this.bullets) b.draw(c);
     this.player.draw(c, this.walls, AREA);
     this.particles.draw(c);
-    this.ui.drawHud(c, LEVELS[this.level].name, this.score, this.player.bullets);
+    this.ui.drawHud(c, LEVELS[this.level].name, this.score, this.player.bullets, this.bestScore);
   }
 
   _loop() {

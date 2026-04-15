@@ -314,13 +314,13 @@ class UI:
     # IN-GAME HUD — Shown during gameplay at the top of the screen
     # =================================================================
 
-    def draw_hud(self, level_name, score, bullets_remaining):
+    def draw_hud(self, level_name, score, bullets_remaining, best_score=0):
         """
         Render the top HUD (Heads-Up Display) bar.
 
         LAYOUT:
             Left:   Level name (white)
-            Center: Score (gold)
+            Center: Score & Best Score (gold)
             Right:  Bullet count (white, turns RED when 0)
 
         The HUD has a gradient background (dark top → transparent bottom)
@@ -335,8 +335,13 @@ class UI:
         # ─── Level name (left side) ──────────────────────────────────
         self.text.draw(level_name, 15, 14, 20, COL_TEXT)
 
-        # ─── Score (center) ──────────────────────────────────────────
-        self.text.draw(f"Score: {score}", SCREEN_WIDTH // 2, 14,
+        # ─── Score & Best (center) ───────────────────────────────────
+        center_text = f"Score: {score}"
+        if best_score > 0:
+            # Show the max of current and best so it never looks wrong while playing
+            displayed_best = max(score, best_score)
+            center_text += f"    Best: {displayed_best}"
+        self.text.draw(center_text, SCREEN_WIDTH // 2, 14,
                        24, COL_TITLE, centered=True)
 
         # ─── Bullets remaining (right side) ──────────────────────────
@@ -360,40 +365,42 @@ class UI:
     # LEVEL COMPLETE — Shown between levels
     # =================================================================
 
-    def draw_level_complete(self, level_num, score, frame=0):
+    def draw_level_complete(self, level, score, frame=0, best_score=0):
         """
-        Render the level-complete transition screen.
-
-        Shows the level number cleared, current score, level bonus,
-        and options to continue or return to menu.
-
-        Features a green radial glow and blinking "Next Level" prompt.
+        Render the mid-level transition screen.
+        Features a green radial glow and score summary.
         """
         cx = SCREEN_WIDTH // 2
         cy = SCREEN_HEIGHT // 2
 
-        # Green radial glow background
+        # Green radial glow (success feeling)
         draw_radial_gradient(cx, cy - 40, 200,
                              (0.0, 1.0, 0.5, 0.06))
-        draw_glow(cx, cy - 60, 120, (0.0, 1.0, 0.5, 0.10), layers=4)
+        draw_glow(cx, cy - 60, 120, (0.0, 1.0, 0.5, 0.1), layers=4)
 
         # "LEVEL COMPLETE!" — large green text
         self.text.draw("LEVEL COMPLETE!", cx, cy - 80,
                        44, COL_SUCCESS, centered=True)
-        self.text.draw(f"Level {level_num} Cleared", cx, cy - 25,
+        self.text.draw(f"Level {level} Cleared", cx, cy - 25,
                        24, COL_SUBTITLE, centered=True)
 
-        # Divider
+        # Separator line
         draw_line(cx - 60, cy + 5, cx + 60, cy + 5,
                   (0.3, 0.5, 0.4, 0.5), 1.0)
 
-        # Score and bonus
+        # Current Score
         self.text.draw(f"Score: {score}", cx, cy + 25,
                        28, COL_TITLE, centered=True)
         self.text.draw(f"+{SCORE_LEVEL_BONUS} Level Bonus!", cx, cy + 65,
                        22, COL_TITLE, centered=True)
 
-        # Blinking "Next Level" prompt
+        # Best Score
+        if best_score > 0:
+            displayed_best = max(score, best_score)
+            self.text.draw(f"Best Score: {displayed_best}", cx, cy + 105,
+                           20, COL_TITLE, centered=True)
+
+        # Blinking hint text
         blink = 0.5 + 0.5 * math.sin(frame * 0.06)
         self.text.draw("Press ENTER for Next Level", cx, cy + 140,
                        24, COL_TEXT, centered=True, alpha=blink)
@@ -404,12 +411,10 @@ class UI:
     # WIN SCREEN — Shown after all levels are cleared
     # =================================================================
 
-    def draw_win(self, score, frame=0):
+    def draw_win(self, score, frame=0, best_score=0):
         """
-        Render the victory screen after all levels are cleared.
-
-        Features a golden radial glow, animated crosshair decoration,
-        and the final score.
+        Render the victory screen when all levels are beaten.
+        Features a large golden glow and rotating crosshair.
         """
         cx = SCREEN_WIDTH // 2
         cy = SCREEN_HEIGHT // 2
@@ -452,7 +457,7 @@ class UI:
     # GAME OVER SCREEN — Shown when bullets are exhausted
     # =================================================================
 
-    def draw_game_over(self, score, frame=0, retries_left=0, retry_penalty=0):
+    def draw_game_over(self, score, frame=0, retries_left=0, retry_penalty=0, best_score=0):
         """
         Render the game-over screen when the player runs out of bullets.
 
@@ -484,6 +489,12 @@ class UI:
         # Score at the moment of failure
         self.text.draw(f"Score: {score}", cx, cy + 25,
                        28, COL_TEXT, centered=True)
+        
+        # Best Score
+        if best_score > 0:
+            displayed_best = max(score, best_score)
+            self.text.draw(f"Best Score: {displayed_best}", cx, cy + 65,
+                           24, COL_TITLE, centered=True)
 
         # Blinking "Retry" prompt with retry info
         blink = 0.5 + 0.5 * math.sin(frame * 0.06)
