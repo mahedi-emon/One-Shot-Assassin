@@ -1,23 +1,9 @@
 # 🎯 One Shot Assassin
 
-A **2D strategy shooting puzzle game** built with **Python**, **Pygame**, and **PyOpenGL**
-for the **Computer Graphics** university course.
+A **2D strategy shooting puzzle game** built with **Python**, **Pygame**, and **PyOpenGL**.
 
 The player has a **limited number of bullets** and must eliminate all enemies using
 **ricochet/bounce mechanics**. Think carefully — every shot counts!
-
----
-
-## 📋 Course Information
-
-| Field            | Details                                         |
-| ---------------- | ----------------------------------------------- |
-| **Course**       | Computer Graphics                               |
-| **Department**   | Computer Science & Engineering                  |
-| **University**   | Daffodil International University               |
-| **Year**         | 2026                                            |
-| **Language**     | Python 3.12+                                    |
-| **Libraries**    | Pygame, PyOpenGL, PyOpenGL-accelerate           |
 
 ---
 
