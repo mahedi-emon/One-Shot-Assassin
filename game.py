@@ -598,18 +598,19 @@ class Game:
         elif self.state == STATE_LEVEL_COMPLETE:
             self.menu_particles.draw()
             self.ui.draw_level_complete(
-                self.current_level + 1, self.score, self.frame,
+                self.current_level + 1, self.score, self.frame, self.best_score
             )
 
         elif self.state == STATE_WIN:
             self.menu_particles.draw()
-            self.ui.draw_win(self.score, self.frame)
+            self.ui.draw_win(self.score, self.frame, self.best_score)
 
         elif self.state == STATE_GAME_OVER:
             self.menu_particles.draw()
             self.ui.draw_game_over(self.score, self.frame,
                                    self.retries_left,
-                                   RETRY_PENALTIES[self.current_level])
+                                   RETRY_PENALTIES[self.current_level],
+                                   self.best_score)
 
         # ─── 4. Fade overlay (drawn ON TOP of everything) ────────────
         # During transitions, this black rectangle gradually covers
@@ -654,4 +655,5 @@ class Game:
         # 7. HUD bar (always on top of everything)
         level_name = LEVELS[self.current_level]["name"]
         self.ui.draw_hud(level_name, self.score,
-                         self.player.bullets_remaining)
+                         self.player.bullets_remaining,
+                         self.best_score)
