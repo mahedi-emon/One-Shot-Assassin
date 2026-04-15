@@ -67,7 +67,7 @@ LEVELS = [
             {"x": 150, "y": 120, "type": "static"},    # Top-left (behind wall)
             {"x": 400, "y": 200, "type": "static"},    # Mid-left
             {"x": 600, "y": 120, "type": "static"},    # Top-right (behind wall)
-            {"x": 750, "y": 300, "type": "static"},    # Right side
+            {"x": 750, "y": 380, "type": "static"},    # Right side (below wall)
         ],
         "walls": [
             # Horizontal wall on the left — blocks direct path to top-left enemy
