@@ -120,6 +120,13 @@ SCORE_BULLET_PENALTY = 2    # Points deducted per bullet fired (-2)
 SCORE_LEVEL_BONUS    = 50   # Bonus for completing a level (+50)
 
 # =============================================================================
+# RETRY SYSTEM — Extra chances per level before returning to Level 1
+# =============================================================================
+# Index 0 = Level 1, Index 1 = Level 2, Index 2 = Level 3
+RETRY_COUNTS    = [0, 2, 3]    # Level 1: 0 retries, Level 2: 2, Level 3: 3
+RETRY_PENALTIES = [0, 7, 10]   # Score penalty: Level 2 retry = -7, Level 3 = -10
+
+# =============================================================================
 # GAME STATES — String identifiers for the state machine
 # =============================================================================
 # The game is always in exactly one of these states.

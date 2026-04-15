@@ -44,6 +44,7 @@ from renderer import (
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, FPS, GAME_TITLE, PLAY_AREA,
     SCORE_ENEMY, SCORE_BULLET_PENALTY, SCORE_LEVEL_BONUS,
+    RETRY_COUNTS, RETRY_PENALTIES,                  # Retry system constants
     FADE_SPEED,                                     # Fade transition speed
     STATE_MENU, STATE_INSTRUCTIONS, STATE_PLAYING,  # State constants
     STATE_LEVEL_COMPLETE, STATE_WIN, STATE_GAME_OVER,
@@ -125,6 +126,11 @@ class Game:
         # ─── Score and Level Tracking ────────────────────────────────
         self.score = 0                  # Current total score
         self.current_level = 0          # Current level index (0-based)
+        self.best_score = 0             # Best score this session (persists until restart)
+
+        # ─── Retry System ────────────────────────────────────────────
+        # Extra chances per level before falling back to Level 1
+        self.retries_left = 0           # Remaining retries for current level
 
         # ─── Menu Demo Bullets ───────────────────────────────────────
         # Two bullets bouncing around the menu background for visual style
@@ -302,12 +308,25 @@ class Game:
                 audio.play('select')
                 self._start_fade_to(STATE_MENU)
 
-        # ─── WIN / GAME OVER STATE ───────────────────────────────────
-        elif self.state in (STATE_WIN, STATE_GAME_OVER):
+        # ─── WIN STATE ────────────────────────────────────────────────
+        elif self.state == STATE_WIN:
             if key == pygame.K_r:
                 audio.play('select')
-                # Play again: fade out → reset → fade in
                 self._start_fade_to(STATE_PLAYING, self._do_start_new_game)
+            elif key == pygame.K_ESCAPE:
+                audio.play('select')
+                self._start_fade_to(STATE_MENU)
+
+        # ─── GAME OVER STATE (with retry system) ─────────────────────
+        elif self.state == STATE_GAME_OVER:
+            if key == pygame.K_r:
+                audio.play('select')
+                if self.retries_left > 0:
+                    # Retry same level with score penalty
+                    self._start_fade_to(STATE_PLAYING, self._do_retry_level)
+                else:
+                    # No retries left → back to Level 1
+                    self._start_fade_to(STATE_PLAYING, self._do_start_new_game)
             elif key == pygame.K_ESCAPE:
                 audio.play('select')
                 self._start_fade_to(STATE_MENU)
@@ -338,8 +357,10 @@ class Game:
         Called at the MIDPOINT of a fade transition (screen is black).
         This ensures the player doesn't see the level loading.
         """
+        self.best_score = max(self.best_score, self.score)  # Save best
         self.score = 0              # Reset score to zero
         self.current_level = 0      # Back to level 1 (index 0)
+        self.retries_left = RETRY_COUNTS[0]  # Set retries for Level 1
         self._load_level(0)         # Load level 1 data
 
     def start_new_game(self):
@@ -351,10 +372,24 @@ class Game:
         Load the next level (called at fade transition midpoint).
 
         Increments current_level and loads the next level's data.
+        Sets retries for the new level.
         """
         self.current_level += 1
         if self.current_level < len(LEVELS):
+            self.retries_left = RETRY_COUNTS[self.current_level]
             self._load_level(self.current_level)
+
+    def _do_retry_level(self):
+        """
+        Retry the current level with a score penalty.
+
+        Deducts the retry penalty and reloads the same level.
+        Decrements retries_left so the player has fewer chances.
+        """
+        penalty = RETRY_PENALTIES[self.current_level]
+        self.score -= penalty                # Deduct retry penalty
+        self.retries_left -= 1               # One fewer retry remaining
+        self._load_level(self.current_level)  # Reload same level
 
     def _load_level(self, index):
         """
@@ -473,6 +508,7 @@ class Game:
             if self.current_level >= len(LEVELS) - 1:
                 if self.state != STATE_WIN:
                     audio.play('win')
+                    self.best_score = max(self.best_score, self.score)
                 self.state = STATE_WIN          # Last level → VICTORY!
             else:
                 if self.state != STATE_LEVEL_COMPLETE:
@@ -484,6 +520,7 @@ class Game:
             # No bullets left AND no bullets in flight → GAME OVER
             if self.state != STATE_GAME_OVER:
                 audio.play('game_over')
+                self.best_score = max(self.best_score, self.score)
             self.state = STATE_GAME_OVER
 
     def _update_menu_effects(self):
@@ -549,7 +586,7 @@ class Game:
             self.menu_particles.draw()      # Ambient particles (behind text)
             for db in self.demo_bullets:    # Demo bullets (behind text)
                 self.ui.draw_demo_bullet(db["trail"], db["x"], db["y"])
-            self.ui.draw_menu(self.frame)   # Menu text and decorations
+            self.ui.draw_menu(self.frame, self.best_score)
 
         elif self.state == STATE_INSTRUCTIONS:
             self.menu_particles.draw()
@@ -570,7 +607,9 @@ class Game:
 
         elif self.state == STATE_GAME_OVER:
             self.menu_particles.draw()
-            self.ui.draw_game_over(self.score, self.frame)
+            self.ui.draw_game_over(self.score, self.frame,
+                                   self.retries_left,
+                                   RETRY_PENALTIES[self.current_level])
 
         # ─── 4. Fade overlay (drawn ON TOP of everything) ────────────
         # During transitions, this black rectangle gradually covers

@@ -93,7 +93,7 @@ class UI:
         # Draw the solid bullet core
         draw_circle(x, y, 5, COL_BULLET_CORE)
 
-    def draw_menu(self, frame):
+    def draw_menu(self, frame, best_score=0):
         """
         Render the main menu screen with polished indie-game aesthetics.
 
@@ -171,7 +171,12 @@ class UI:
         self.text.draw("Press ESC to Quit", cx, menu_y + 100,
                        19, COL_DIM, centered=True)
 
-        # ─── 7. Footer — University information ──────────────────────
+        # ─── 7. Best Score (shown only if > 0) ──────────────────────
+        if best_score > 0:
+            self.text.draw(f"Best Score: {best_score}", cx, menu_y + 145,
+                           20, COL_TITLE, centered=True)
+
+        # ─── 8. Footer — University information ──────────────────────
         self._draw_footer(frame)
 
     def _draw_footer(self, frame):
@@ -447,10 +452,11 @@ class UI:
     # GAME OVER SCREEN — Shown when bullets are exhausted
     # =================================================================
 
-    def draw_game_over(self, score, frame=0):
+    def draw_game_over(self, score, frame=0, retries_left=0, retry_penalty=0):
         """
         Render the game-over screen when the player runs out of bullets.
 
+        Shows retry count and penalty info.
         Features a red radial glow and the player's final score.
         """
         cx = SCREEN_WIDTH // 2
@@ -479,9 +485,19 @@ class UI:
         self.text.draw(f"Score: {score}", cx, cy + 25,
                        28, COL_TEXT, centered=True)
 
-        # Blinking "Retry" prompt
+        # Blinking "Retry" prompt with retry info
         blink = 0.5 + 0.5 * math.sin(frame * 0.06)
-        self.text.draw("Press R to Retry", cx, cy + 105,
-                       24, COL_TEXT, centered=True, alpha=blink)
+
+        if retries_left > 0:
+            # Show retries remaining and penalty
+            self.text.draw(f"Press R to Retry ({retries_left} left, -{retry_penalty} pts)",
+                           cx, cy + 100,
+                           24, COL_TEXT, centered=True, alpha=blink)
+        else:
+            # No retries — back to Level 1
+            self.text.draw("Press R to Restart from Level 1",
+                           cx, cy + 100,
+                           24, COL_DANGER, centered=True, alpha=blink)
+
         self.text.draw("Press ESC for Menu", cx, cy + 150,
                        20, COL_SUBTITLE, centered=True)
