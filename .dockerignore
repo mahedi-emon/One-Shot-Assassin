@@ -1,7 +1,0 @@
-venv/
-__pycache__/
-*.py[cod]
-assets/sounds/
-*.pyc
-.DS_Store
-Thumbs.db
