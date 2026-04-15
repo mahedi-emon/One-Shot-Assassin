@@ -1,0 +1,33 @@
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: #080818;
+  display: flex; justify-content: center; align-items: center;
+  overflow: hidden;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+#game {
+  display: block;
+  border: 2px solid rgba(0, 150, 255, 0.15);
+  border-radius: 6px;
+  box-shadow:
+    0 0 30px rgba(0, 150, 255, 0.08),
+    0 0 80px rgba(0, 0, 0, 0.6);
+  max-width: 100vw;
+  max-height: 100vh;
+  image-rendering: auto;
+}
+
+#mobile-hint {
+  display: none;
+  position: fixed; bottom: 20px;
+  color: rgba(255,255,255,0.5);
+  text-align: center; font-size: 14px; line-height: 1.6;
+}
+
+@media (max-width: 920px) {
+  #game { max-width: 100vw; max-height: auto; }
+  #mobile-hint { display: block; }
+}
