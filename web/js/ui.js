@@ -72,7 +72,10 @@ export class UI {
       ["ESC (or Menu Button)","Return to Menu"]
     ];
     for(const [k,a] of ctrls){
-      drawText(ctx,k,cx-90,y,17,C_TITLE); drawText(ctx,a,cx+70,y,17,C_SUB); y+=28;
+      const kw = measureText(ctx, k, 17);
+      drawText(ctx, k, cx - 15 - kw, y, 17, C_TITLE);
+      drawText(ctx, a, cx + 15, y, 17, C_SUB);
+      y+=28;
     }
 
     y+=15; drawLine(ctx,cx-80,y,cx+80,y,[0.25,0.25,0.35,0.4]); y+=18;

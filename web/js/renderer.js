@@ -151,13 +151,13 @@ export function drawFade(ctx, alpha) {
 }
 
 export function drawText(ctx, text, x, y, size, color, opts={}) {
-  const { centered=false, alpha=1 } = opts;
+  const { centered=false, align='left', alpha=1 } = opts;
   ctx.save();
   ctx.font = `bold ${size}px 'Segoe UI', Arial, sans-serif`;
   ctx.fillStyle = rgba(color, color[3]*alpha);
   ctx.textBaseline = 'middle';
   if (centered) { ctx.textAlign = 'center'; ctx.fillText(text, x, y); }
-  else { ctx.textAlign = 'left'; ctx.fillText(text, x, y); }
+  else { ctx.textAlign = align; ctx.fillText(text, x, y); }
   ctx.restore();
 }
 
