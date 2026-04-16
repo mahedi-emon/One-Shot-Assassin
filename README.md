@@ -93,6 +93,14 @@ The game window (900×700) opens with the main menu.
 | 3     | Moving Targets  | 5       | 4       | 3     | Moving enemies + complex wall layout   |
 
 ---
+## Images
+<img width="904" height="710" alt="image" src="https://github.com/user-attachments/assets/2708b65f-d534-4960-9df9-0454644e2951" />
+<img width="897" height="711" alt="image" src="https://github.com/user-attachments/assets/85cec795-0974-401d-bce7-ec8548aeff71" />
+<img width="895" height="689" alt="image" src="https://github.com/user-attachments/assets/a4efd821-f1fd-43ce-9532-0c1f20a3b347" />
+<img width="894" height="692" alt="image" src="https://github.com/user-attachments/assets/cd1acef8-aad5-4870-97bb-76bc60898107" />
+<img width="903" height="685" alt="image" src="https://github.com/user-attachments/assets/e57ffa97-b139-441d-900f-badbb52474fd" />
+<img width="920" height="715" alt="image" src="https://github.com/user-attachments/assets/2f041342-1f7b-4015-9ed1-69dec4fc125f" />
+<img width="909" height="709" alt="image" src="https://github.com/user-attachments/assets/a270d4f2-1d3c-440c-bd68-c2a09c45b86d" />
 
 ## 📁 Project Structure
 
