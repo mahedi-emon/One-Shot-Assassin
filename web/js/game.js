@@ -40,7 +40,8 @@ class Game {
     this.menuParticles = new ParticleSystem();
 
     // --- Mobile / Touch ---
-    this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    // Detect mobile if touch API exists OR if screen is small (for easy testing on desktop)
+    this.isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 920);
     this.touchState = { left: false, right: false };
 
     // Touch control button rects (canvas coords)
@@ -60,6 +61,19 @@ class Game {
       e.preventDefault();
     });
     window.addEventListener('keyup', e => { this.keys[e.key] = false; });
+
+    // --- Input: Mouse (for testing touch buttons on desktop) ---
+    canvas.addEventListener('mousedown', e => {
+      audioInit();
+      if (this.fadeDir === 0) this._onTouchStart([{clientX: e.clientX, clientY: e.clientY}]);
+      this._syncMouseHold(e);
+    });
+    canvas.addEventListener('mousemove', e => {
+      if (e.buttons > 0) this._syncMouseHold(e);
+    });
+    window.addEventListener('mouseup', () => {
+      this.touchState = { left: false, right: false };
+    });
 
     // --- Input: Touch ---
     if (this.isMobile) {
@@ -113,6 +127,16 @@ class Game {
       if (this._inRect(pos, this.TB.left))  this.touchState.left = true;
       if (this._inRect(pos, this.TB.right)) this.touchState.right = true;
     }
+  }
+
+  /** Mimic touch hold for desktop mouse sliding */
+  _syncMouseHold(e) {
+    this.touchState.left = false;
+    this.touchState.right = false;
+    if (this.state !== S_PLAY) return;
+    const pos = this._getTouchPos(e);
+    if (this._inRect(pos, this.TB.left))  this.touchState.left = true;
+    if (this._inRect(pos, this.TB.right)) this.touchState.right = true;
   }
 
   /** Handle one-shot tap actions from newly-changed touches */
