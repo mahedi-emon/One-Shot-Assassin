@@ -33,14 +33,9 @@ export class UI {
     const my=310;
     const blink=0.55+0.45*Math.sin(frame*0.06);
 
-    if (mobile) {
-      drawText(ctx,"Tap to Start",cx,my,28,C_TEXT,{centered:true,alpha:blink});
-      drawText(ctx,"Tap Here for Instructions",cx,my+55,21,C_SUB,{centered:true});
-    } else {
-      drawText(ctx,"Press ENTER to Start",cx,my,28,C_TEXT,{centered:true,alpha:blink});
-      drawText(ctx,"Press I for Instructions",cx,my+55,21,C_SUB,{centered:true});
-      drawText(ctx,"Press ESC to Quit",cx,my+100,19,C_DIM,{centered:true});
-    }
+    drawText(ctx,"Press ENTER or Tap to Start",cx,my,28,C_TEXT,{centered:true,alpha:blink});
+    drawText(ctx,"Press I or Tap Here for Instructions",cx,my+55,21,C_SUB,{centered:true});
+    if (!mobile) drawText(ctx,"Press ESC to Quit",cx,my+100,19,C_DIM,{centered:true});
 
     if (bestScore > 0) {
       const bsy = mobile ? my+115 : my+145;
@@ -68,26 +63,16 @@ export class UI {
     drawLineGrad(ctx,cx,88,cx+100,88,[0.4,0.4,0.55,0.6],[0.2,0.2,0.3,0]);
 
     let y=118;
-
-    if (mobile) {
-      // Touch controls section
-      drawText(ctx,"TOUCH CONTROLS",cx,y,22,C_TEXT,{centered:true}); y+=38;
-      const tCtrls=[
-        ["LEFT BUTTON","Rotate Aim Left"],
-        ["RIGHT BUTTON","Rotate Aim Right"],
-        ["FIRE BUTTON","Shoot Bullet"],
-        ["MENU BUTTON","Return to Menu"]
-      ];
-      for(const [k,a] of tCtrls){
-        drawText(ctx,k,cx-40,y,18,C_TITLE); drawText(ctx,a,cx+100,y,18,C_SUB); y+=28;
-      }
-    } else {
-      // Keyboard controls section
-      drawText(ctx,"CONTROLS",cx,y,22,C_TEXT,{centered:true}); y+=38;
-      const ctrls=[["LEFT / RIGHT","Rotate Aim Direction"],["SPACE","Fire Bullet"],["R","Restart Game"],["ESC","Return to Menu"]];
-      for(const [k,a] of ctrls){
-        drawText(ctx,k,cx-40,y,18,C_TITLE); drawText(ctx,a,cx+80,y,18,C_SUB); y+=28;
-      }
+    // Show unified controls section
+    drawText(ctx,"CONTROLS",cx,y,22,C_TEXT,{centered:true}); y+=38;
+    const ctrls=[
+      ["LEFT / RIGHT (or ◀ / ▶)","Rotate Aim Direction"],
+      ["SPACE (or 🎯 BUTTON)","Fire Bullet"],
+      ["R (or Replay Button)","Restart Game"],
+      ["ESC (or Menu Button)","Return to Menu"]
+    ];
+    for(const [k,a] of ctrls){
+      drawText(ctx,k,cx-90,y,17,C_TITLE); drawText(ctx,a,cx+70,y,17,C_SUB); y+=28;
     }
 
     y+=15; drawLine(ctx,cx-80,y,cx+80,y,[0.25,0.25,0.35,0.4]); y+=18;
