@@ -104,8 +104,9 @@ export class UI {
     drawText(ctx,st,W/2,14+HUD_H/2-10,24,C_TITLE,{centered:true});
     const col=bullets===0?C_DANGER:C_TEXT;
     const bt=`Bullets: ${bullets}`;
-    const tw=measureText(ctx,bt,20);
-    drawText(ctx,bt,W-tw-15,14+HUD_H/2-10,20,col);
+    const tw = measureText(ctx, bt, 20);
+    const rightMargin = mobile ? 115 : 15;
+    drawText(ctx, bt, W - tw - rightMargin, 14 + HUD_H / 2 - 10, 20, col);
     drawLineGrad(ctx,0,HUD_H,W/2,HUD_H,[0.15,0.2,0.3,0],[0.25,0.35,0.5,0.8]);
     drawLineGrad(ctx,W/2,HUD_H,W,HUD_H,[0.25,0.35,0.5,0.8],[0.15,0.2,0.3,0]);
 

@@ -12,6 +12,10 @@ import { ParticleSystem } from './particles.js';
 import { UI } from './ui.js';
 
 class Game {
+  get isMobile() {
+    return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 920);
+  }
+
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
@@ -39,9 +43,6 @@ class Game {
     ];
     this.menuParticles = new ParticleSystem();
 
-    // --- Mobile / Touch ---
-    // Detect mobile if touch API exists OR if screen is small (for easy testing on desktop)
-    this.isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 920);
     this.touchState = { left: false, right: false };
 
     // Touch control button rects (canvas coords)
