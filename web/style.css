@@ -1,7 +1,8 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 
 html, body {
-  width: 100%; height: 100%;
+  margin: 0; padding: 0;
+  width: 100vw; min-height: 100vh;
   background: #080818;
   display: flex; justify-content: center; align-items: center;
   overflow: hidden;
@@ -17,7 +18,7 @@ html, body {
     0 0 80px rgba(0, 0, 0, 0.6);
   max-width: 100vw;
   max-height: 100vh;
-  image-rendering: auto;
+  object-fit: contain;
 }
 
 #mobile-hint {
