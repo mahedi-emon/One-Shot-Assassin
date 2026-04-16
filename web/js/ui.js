@@ -1,4 +1,4 @@
-// ui.js — All UI screens (ported from ui.py)
+// ui.js — All UI screens with touch support (ported from ui.py)
 import { W, H, HUD_H, SC_BONUS, C_TEXT, C_TITLE, C_SUB, C_OK, C_DANGER,
          C_BCORE, C_BGLOW, C_TRAIL, C_FOOT, C_DIM, C_CROSS } from './settings.js';
 import { drawCircle, drawGlow, drawRadialGrad, drawCrosshair, drawLineGrad,
@@ -15,7 +15,7 @@ export class UI {
     drawCircle(ctx,x,y,5,C_BCORE);
   }
 
-  drawMenu(ctx, frame, bestScore=0) {
+  drawMenu(ctx, frame, bestScore=0, mobile=false) {
     const cx=W/2;
     const ga=0.06+0.02*Math.sin(frame*0.015);
     drawRadialGrad(ctx,cx,200,320,[1,0.75,0.2,ga]);
@@ -32,12 +32,19 @@ export class UI {
 
     const my=310;
     const blink=0.55+0.45*Math.sin(frame*0.06);
-    drawText(ctx,"Press ENTER to Start",cx,my,28,C_TEXT,{centered:true,alpha:blink});
-    drawText(ctx,"Press I for Instructions",cx,my+55,21,C_SUB,{centered:true});
-    drawText(ctx,"Press ESC to Quit",cx,my+100,19,C_DIM,{centered:true});
+
+    if (mobile) {
+      drawText(ctx,"Tap to Start",cx,my,28,C_TEXT,{centered:true,alpha:blink});
+      drawText(ctx,"Tap Here for Instructions",cx,my+55,21,C_SUB,{centered:true});
+    } else {
+      drawText(ctx,"Press ENTER to Start",cx,my,28,C_TEXT,{centered:true,alpha:blink});
+      drawText(ctx,"Press I for Instructions",cx,my+55,21,C_SUB,{centered:true});
+      drawText(ctx,"Press ESC to Quit",cx,my+100,19,C_DIM,{centered:true});
+    }
 
     if (bestScore > 0) {
-      drawText(ctx,`Best Score: ${bestScore}`,cx,my+145,20,C_TITLE,{centered:true});
+      const bsy = mobile ? my+115 : my+145;
+      drawText(ctx,`Best Score: ${bestScore}`,cx,bsy,20,C_TITLE,{centered:true});
     }
 
     this._drawFooter(ctx,frame);
@@ -53,7 +60,7 @@ export class UI {
     drawText(ctx,"Developed using JavaScript & HTML5 Canvas",cx,H-18,12,C_DIM,{centered:true});
   }
 
-  drawInstructions(ctx, frame=0) {
+  drawInstructions(ctx, frame=0, mobile=false) {
     const cx=W/2;
     drawGlow(ctx,cx,58,80,[1,0.84,0,0.08],3);
     drawText(ctx,"HOW TO PLAY",cx,55,40,C_TITLE,{centered:true});
@@ -61,10 +68,26 @@ export class UI {
     drawLineGrad(ctx,cx,88,cx+100,88,[0.4,0.4,0.55,0.6],[0.2,0.2,0.3,0]);
 
     let y=118;
-    drawText(ctx,"CONTROLS",cx,y,22,C_TEXT,{centered:true}); y+=38;
-    const ctrls=[["LEFT / RIGHT","Rotate Aim Direction"],["SPACE","Fire Bullet"],["R","Restart Game"],["ESC","Return to Menu"]];
-    for(const [k,a] of ctrls){
-      drawText(ctx,k,cx-40,y,18,C_TITLE); drawText(ctx,a,cx+80,y,18,C_SUB); y+=28;
+
+    if (mobile) {
+      // Touch controls section
+      drawText(ctx,"TOUCH CONTROLS",cx,y,22,C_TEXT,{centered:true}); y+=38;
+      const tCtrls=[
+        ["LEFT BUTTON","Rotate Aim Left"],
+        ["RIGHT BUTTON","Rotate Aim Right"],
+        ["FIRE BUTTON","Shoot Bullet"],
+        ["MENU BUTTON","Return to Menu"]
+      ];
+      for(const [k,a] of tCtrls){
+        drawText(ctx,k,cx-40,y,18,C_TITLE); drawText(ctx,a,cx+100,y,18,C_SUB); y+=28;
+      }
+    } else {
+      // Keyboard controls section
+      drawText(ctx,"CONTROLS",cx,y,22,C_TEXT,{centered:true}); y+=38;
+      const ctrls=[["LEFT / RIGHT","Rotate Aim Direction"],["SPACE","Fire Bullet"],["R","Restart Game"],["ESC","Return to Menu"]];
+      for(const [k,a] of ctrls){
+        drawText(ctx,k,cx-40,y,18,C_TITLE); drawText(ctx,a,cx+80,y,18,C_SUB); y+=28;
+      }
     }
 
     y+=15; drawLine(ctx,cx-80,y,cx+80,y,[0.25,0.25,0.35,0.4]); y+=18;
@@ -80,10 +103,11 @@ export class UI {
     drawText(ctx,"+50  level completion bonus",cx,y,19,C_TITLE,{centered:true});
 
     const bl=0.4+0.3*Math.sin(frame*0.05);
-    drawText(ctx,"Press ESC to go back",cx,H-35,17,C_DIM,{centered:true,alpha:bl});
+    const backText = mobile ? "Tap to go back" : "Press ESC to go back";
+    drawText(ctx,backText,cx,H-35,17,C_DIM,{centered:true,alpha:bl});
   }
 
-  drawHud(ctx, name, score, bullets, bestScore=0) {
+  drawHud(ctx, name, score, bullets, bestScore=0, mobile=false) {
     drawRectGradV(ctx,0,0,W,HUD_H,[0,0,0,0.85],[0,0,0.05,0.5]);
     drawText(ctx,name,15,14+HUD_H/2-10,20,C_TEXT);
     
@@ -96,9 +120,61 @@ export class UI {
     drawText(ctx,bt,W-tw-15,14+HUD_H/2-10,20,col);
     drawLineGrad(ctx,0,HUD_H,W/2,HUD_H,[0.15,0.2,0.3,0],[0.25,0.35,0.5,0.8]);
     drawLineGrad(ctx,W/2,HUD_H,W,HUD_H,[0.25,0.35,0.5,0.8],[0.15,0.2,0.3,0]);
+
+    // Mobile: draw MENU button in top-right
+    if (mobile) {
+      this._drawTouchBtn(ctx, W-95, 7, 85, 36, 'MENU', false, 16);
+    }
   }
 
-  drawLevelComplete(ctx, lvl, score, frame=0, bestScore=0) {
+  /** Draw on-screen touch controls at bottom of play area */
+  drawTouchControls(ctx, touchState) {
+    const btns = [
+      { x: 15,  y: 595, w: 265, h: 90, label: '◀  ROTATE', key: 'left' },
+      { x: 310, y: 595, w: 280, h: 90, label: '🎯  FIRE',  key: 'fire' },
+      { x: 620, y: 595, w: 265, h: 90, label: 'ROTATE  ▶', key: 'right' }
+    ];
+    for (const btn of btns) {
+      const pressed = touchState[btn.key] || false;
+      this._drawTouchBtn(ctx, btn.x, btn.y, btn.w, btn.h, btn.label, pressed, 22);
+    }
+  }
+
+  /** Reusable rounded touch button */
+  _drawTouchBtn(ctx, x, y, w, h, label, pressed=false, fontSize=22) {
+    const alpha = pressed ? 0.3 : 0.12;
+    const borderAlpha = pressed ? 0.55 : 0.2;
+    const textAlpha = pressed ? 0.9 : 0.55;
+    const r = 14;
+
+    // Filled rounded rect
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath(); ctx.fill();
+
+    // Border
+    ctx.strokeStyle = `rgba(0,150,255,${borderAlpha})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath(); ctx.stroke();
+    ctx.lineWidth = 1;
+
+    // Label text
+    ctx.fillStyle = `rgba(255,255,255,${textAlpha})`;
+    ctx.font = `bold ${fontSize}px 'Segoe UI', Arial, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x + w/2, y + h/2);
+  }
+
+  drawLevelComplete(ctx, lvl, score, frame=0, bestScore=0, mobile=false) {
     const cx=W/2, cy=H/2;
     drawRadialGrad(ctx,cx,cy-40,200,[0,1,0.5,0.06]);
     drawGlow(ctx,cx,cy-60,120,[0,1,0.5,0.1],4);
@@ -113,11 +189,13 @@ export class UI {
     }
 
     const bl=0.5+0.5*Math.sin(frame*0.06);
-    drawText(ctx,"Press ENTER for Next Level",cx,cy+140,24,C_TEXT,{centered:true,alpha:bl});
-    drawText(ctx,"Press ESC for Menu",cx,cy+180,20,C_SUB,{centered:true});
+    const nextText = mobile ? "Tap to Continue" : "Press ENTER for Next Level";
+    drawText(ctx,nextText,cx,cy+140,24,C_TEXT,{centered:true,alpha:bl});
+    const backText = mobile ? "": "Press ESC for Menu";
+    if (backText) drawText(ctx,backText,cx,cy+180,20,C_SUB,{centered:true});
   }
 
-  drawWin(ctx, score, frame=0, bestScore=0) {
+  drawWin(ctx, score, frame=0, bestScore=0, mobile=false) {
     const cx=W/2, cy=H/2;
     drawRadialGrad(ctx,cx,cy-60,250,[1,0.84,0,0.06]);
     drawGlow(ctx,cx,cy-80,180,[1,0.84,0,0.1],5);
@@ -133,11 +211,13 @@ export class UI {
     }
 
     const bl=0.5+0.5*Math.sin(frame*0.06);
-    drawText(ctx,"Press R to Play Again",cx,cy+110,24,C_TEXT,{centered:true,alpha:bl});
-    drawText(ctx,"Press ESC for Menu",cx,cy+155,20,C_SUB,{centered:true});
+    const playText = mobile ? "Tap to Play Again" : "Press R to Play Again";
+    drawText(ctx,playText,cx,cy+110,24,C_TEXT,{centered:true,alpha:bl});
+    const backText = mobile ? "" : "Press ESC for Menu";
+    if (backText) drawText(ctx,backText,cx,cy+155,20,C_SUB,{centered:true});
   }
 
-  drawGameOver(ctx, score, frame=0, retriesLeft=0, retryPenalty=0, bestScore=0) {
+  drawGameOver(ctx, score, frame=0, retriesLeft=0, retryPenalty=0, bestScore=0, mobile=false) {
     const cx=W/2, cy=H/2;
     drawRadialGrad(ctx,cx,cy-60,250,[1,0.1,0.15,0.06]);
     drawGlow(ctx,cx,cy-80,160,[1,0.1,0.15,0.1],5);
@@ -153,10 +233,17 @@ export class UI {
 
     const bl=0.5+0.5*Math.sin(frame*0.06);
     if (retriesLeft > 0) {
-      drawText(ctx,`Press R to Retry (${retriesLeft} left, -${retryPenalty} pts)`,cx,cy+100,24,C_TEXT,{centered:true,alpha:bl});
+      const retryText = mobile
+        ? `Tap to Retry (${retriesLeft} left, -${retryPenalty} pts)`
+        : `Press R to Retry (${retriesLeft} left, -${retryPenalty} pts)`;
+      drawText(ctx,retryText,cx,cy+100,24,C_TEXT,{centered:true,alpha:bl});
     } else {
-      drawText(ctx,"Press R to Restart from Level 1",cx,cy+100,24,C_DANGER,{centered:true,alpha:bl});
+      const restartText = mobile
+        ? "Tap to Restart from Level 1"
+        : "Press R to Restart from Level 1";
+      drawText(ctx,restartText,cx,cy+100,24,C_DANGER,{centered:true,alpha:bl});
     }
-    drawText(ctx,"Press ESC for Menu",cx,cy+150,20,C_SUB,{centered:true});
+    const backText = mobile ? "" : "Press ESC for Menu";
+    if (backText) drawText(ctx,backText,cx,cy+150,20,C_SUB,{centered:true});
   }
 }

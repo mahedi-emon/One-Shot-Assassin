@@ -1,6 +1,6 @@
-// game.js — Main game controller with retry system & best score
+// game.js — Main game controller with retry system, best score & touch controls
 import { W, H, FPS, AREA, FADE_SPD, SC_ENEMY, SC_PEN, SC_BONUS,
-         RETRY_COUNTS, RETRY_PENS,
+         RETRY_COUNTS, RETRY_PENS, HUD_H,
          S_MENU, S_INST, S_PLAY, S_LVLC, S_WIN, S_OVER } from './settings.js';
 import { clearScreen, drawGrid, drawBorder, drawFade } from './renderer.js';
 import { init as audioInit, play as audioPlay } from './audio.js';
@@ -39,7 +39,19 @@ class Game {
     ];
     this.menuParticles = new ParticleSystem();
 
-    // Input
+    // --- Mobile / Touch ---
+    this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    this.touchState = { left: false, right: false };
+
+    // Touch control button rects (canvas coords)
+    this.TB = {
+      left:  { x: 15,  y: 595, w: 265, h: 90 },
+      fire:  { x: 310, y: 595, w: 280, h: 90 },
+      right: { x: 620, y: 595, w: 265, h: 90 },
+      back:  { x: W - 95, y: 7, w: 85, h: 36 }
+    };
+
+    // --- Input: Keyboard ---
     this.keys = {};
     window.addEventListener('keydown', e => {
       audioInit();
@@ -49,9 +61,98 @@ class Game {
     });
     window.addEventListener('keyup', e => { this.keys[e.key] = false; });
 
+    // --- Input: Touch ---
+    if (this.isMobile) {
+      canvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        audioInit();
+        if (this.fadeDir === 0) this._onTouchStart(e.changedTouches);
+        this._syncTouchHold(e.touches);
+      }, { passive: false });
+
+      canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        this._syncTouchHold(e.touches);
+      }, { passive: false });
+
+      canvas.addEventListener('touchend', e => {
+        e.preventDefault();
+        this._syncTouchHold(e.touches);
+      }, { passive: false });
+
+      canvas.addEventListener('touchcancel', e => {
+        e.preventDefault();
+        this.touchState = { left: false, right: false };
+      }, { passive: false });
+    }
+
     this._loop();
   }
 
+  // ─── Touch helpers ───
+  _getTouchPos(touch) {
+    const rect = this.canvas.getBoundingClientRect();
+    return {
+      x: (touch.clientX - rect.left) * (W / rect.width),
+      y: (touch.clientY - rect.top) * (H / rect.height)
+    };
+  }
+
+  _inRect(pos, r) {
+    return pos.x >= r.x && pos.x <= r.x + r.w &&
+           pos.y >= r.y && pos.y <= r.y + r.h;
+  }
+
+  /** Continuously sync rotation hold state from all active touches */
+  _syncTouchHold(touches) {
+    this.touchState.left = false;
+    this.touchState.right = false;
+    if (this.state !== S_PLAY) return;
+    for (let i = 0; i < touches.length; i++) {
+      const pos = this._getTouchPos(touches[i]);
+      if (this._inRect(pos, this.TB.left))  this.touchState.left = true;
+      if (this._inRect(pos, this.TB.right)) this.touchState.right = true;
+    }
+  }
+
+  /** Handle one-shot tap actions from newly-changed touches */
+  _onTouchStart(changedTouches) {
+    for (let i = 0; i < changedTouches.length; i++) {
+      const pos = this._getTouchPos(changedTouches[i]);
+
+      if (this.state === S_PLAY) {
+        // Fire button
+        if (this._inRect(pos, this.TB.fire)) this._shoot();
+        // Back/Menu button in HUD
+        if (this._inRect(pos, this.TB.back)) {
+          audioPlay('select'); this._fadeTo(S_MENU);
+        }
+      } else if (this.state === S_MENU) {
+        audioPlay('select');
+        // Tap on "Instructions" zone (around y 350–390)
+        if (pos.y > 340 && pos.y < 400) {
+          this._fadeTo(S_INST);
+        } else {
+          this._fadeTo(S_PLAY, () => this._newGame());
+        }
+      } else if (this.state === S_INST) {
+        audioPlay('select'); this._fadeTo(S_MENU);
+      } else if (this.state === S_LVLC) {
+        audioPlay('select'); this._fadeTo(S_PLAY, () => this._nextLevel());
+      } else if (this.state === S_WIN) {
+        audioPlay('select'); this._fadeTo(S_PLAY, () => this._newGame());
+      } else if (this.state === S_OVER) {
+        audioPlay('select');
+        if (this.retriesLeft > 0) {
+          this._fadeTo(S_PLAY, () => this._retryLevel());
+        } else {
+          this._fadeTo(S_PLAY, () => this._newGame());
+        }
+      }
+    }
+  }
+
+  // ─── Fade ───
   _fadeTo(state, action) {
     this.fadeDir = 1; this.pendingState = state; this.pendingAction = action;
   }
@@ -69,6 +170,7 @@ class Game {
     }
   }
 
+  // ─── Keyboard handler ───
   _onKey(key) {
     if (this.state === S_MENU) {
       if (key === 'Enter') { audioPlay('select'); this._fadeTo(S_PLAY, ()=>this._newGame()); }
@@ -104,6 +206,7 @@ class Game {
     }
   }
 
+  // ─── Game logic ───
   _newGame() {
     this.bestScore = Math.max(this.bestScore, this.score);
     this.score = 0; this.level = 0;
@@ -142,8 +245,10 @@ class Game {
   }
 
   _updatePlay() {
-    if (this.keys['ArrowLeft']) this.player.rotate(-1);
-    if (this.keys['ArrowRight']) this.player.rotate(1);
+    // Keyboard OR touch rotation
+    if (this.keys['ArrowLeft']  || this.touchState.left)  this.player.rotate(-1);
+    if (this.keys['ArrowRight'] || this.touchState.right) this.player.rotate(1);
+
     for (const b of [...this.bullets]) {
       const hits = b.update(this.walls, this.enemies, this.particles, AREA);
       this.score += hits * SC_ENEMY;
@@ -187,21 +292,21 @@ class Game {
     if (this.state === S_MENU) {
       this.menuParticles.draw(c);
       for (const db of this.demoBullets) this.ui.drawDemoBullet(c, db.trail, db.x, db.y);
-      this.ui.drawMenu(c, this.frame, this.bestScore);
+      this.ui.drawMenu(c, this.frame, this.bestScore, this.isMobile);
     } else if (this.state === S_INST) {
       this.menuParticles.draw(c);
-      this.ui.drawInstructions(c, this.frame);
+      this.ui.drawInstructions(c, this.frame, this.isMobile);
     } else if (this.state === S_PLAY) {
       this._renderPlay(c);
     } else if (this.state === S_LVLC) {
       this.menuParticles.draw(c);
-      this.ui.drawLevelComplete(c, this.level+1, this.score, this.frame, this.bestScore);
+      this.ui.drawLevelComplete(c, this.level+1, this.score, this.frame, this.bestScore, this.isMobile);
     } else if (this.state === S_WIN) {
       this.menuParticles.draw(c);
-      this.ui.drawWin(c, this.score, this.frame, this.bestScore);
+      this.ui.drawWin(c, this.score, this.frame, this.bestScore, this.isMobile);
     } else if (this.state === S_OVER) {
       this.menuParticles.draw(c);
-      this.ui.drawGameOver(c, this.score, this.frame, this.retriesLeft, RETRY_PENS[this.level], this.bestScore);
+      this.ui.drawGameOver(c, this.score, this.frame, this.retriesLeft, RETRY_PENS[this.level], this.bestScore, this.isMobile);
     }
 
     if (this.fadeAlpha > 0) drawFade(c, this.fadeAlpha);
@@ -214,7 +319,8 @@ class Game {
     for (const b of this.bullets) b.draw(c);
     this.player.draw(c, this.walls, AREA);
     this.particles.draw(c);
-    this.ui.drawHud(c, LEVELS[this.level].name, this.score, this.player.bullets, this.bestScore);
+    this.ui.drawHud(c, LEVELS[this.level].name, this.score, this.player.bullets, this.bestScore, this.isMobile);
+    if (this.isMobile) this.ui.drawTouchControls(c, this.touchState);
   }
 
   _loop() {
